@@ -1,0 +1,48 @@
+#!/bin/bash
+
+usage() {
+    echo "Moves all files and directories from source_path to dest_path."
+    echo "If a file exists in dest_path then the new file from source_path will be renamed (name.ext -> name_dup.ext)."
+    echo "For dry run (print the commands but not run them) pass the '-dry' option."
+    echo -e "\nUsage:\nmove_rename_dupes [-dry] source_path dest_path"
+    exit 1
+}
+
+if [[ $# -eq 3 ]] ; then
+    if [[ $1 != "-dry" ]] ; then
+      usage
+    fi
+    dry=$1
+    src=$(readlink -m $2)
+    dst=$(readlink -m $3)
+elif [[ $# -eq 2 ]] ; then
+    src=$(readlink -m $1)
+    dst=$(readlink -m $2)
+else
+  usage
+fi
+
+if [ -z $dry ] ; then
+  my_mkdir='mkdir'
+  my_mv='mv'
+else
+  my_mkdir='echo mkdir'
+  my_mv='echo mv'
+fi
+
+for f in $(find $src -type f); do 
+  target=$dst/${f#"$src/"}
+  if [[ ! -e $target ]]; then 
+    if [[ -z $(dirname $target) ]]; then 
+      $my_mkdir -p $(dirname $target)
+    fi
+    $my_mv $f $target
+  else 
+    filename=$(basename $target "$fullfile")
+    extension="${filename##*.}"
+    filename="${filename%.*}_dup"
+    $my_mv $f $(dirname $target)/$filename.$extension
+  fi; 
+done
+
+
