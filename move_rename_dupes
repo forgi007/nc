@@ -12,12 +12,12 @@ if [[ $# -eq 3 ]] ; then
     if [[ $1 != "-dry" ]] ; then
       usage
     fi
-    dry=$1
-    src=$(readlink -m $2)
-    dst=$(readlink -m $3)
+    dry="$1"
+    src="$(readlink -m "$2")"
+    dst="$(readlink -m "$3")"
 elif [[ $# -eq 2 ]] ; then
-    src=$(readlink -m $1)
-    dst=$(readlink -m $2)
+    src="$(readlink -m "$1")"
+    dst="$(readlink -m "$2")"
 else
   usage
 fi
@@ -30,19 +30,22 @@ else
   my_mv='echo mv'
 fi
 
-for f in $(find $src -type f); do 
-  target=$dst/${f#"$src/"}
-  if [[ ! -e $target ]]; then 
-    if [[ -z $(dirname $target) ]]; then 
-      $my_mkdir -p $(dirname "$target")
+find "$src" -type f -print0 | 
+while IFS= read -r -d '' file; do
+  target="${dst}/${file#${src}/}"
+
+  if [[ ! -e "$target" ]]; then 
+    if [[ -z "$(dirname "$target")" ]]; then 
+      $my_mkdir -p \""$(dirname "$target")"\"
     fi
-    $my_mv "$f" "$target"
+    $my_mv \""$file"\" \""$target"\"
   else 
-    filename=$(basename "$target" "$fullfile")
+    filename="$(basename "$target" "$fullfile")"
     extension="${filename##*.}"
     filename="${filename%.*}_dup"
-    target_dir=$(dirname "$target")
-    $my_mv "$f" "$target_dir/$filename.$extension"
+    target_dir="$(dirname "$target")"
+    target_dir="${target_dir%%/}"
+    $my_mv \""$file"\" \""$target_dir/$filename.$extension"\"
   fi; 
 done
 
