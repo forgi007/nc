@@ -34,14 +34,15 @@ for f in $(find $src -type f); do
   target=$dst/${f#"$src/"}
   if [[ ! -e $target ]]; then 
     if [[ -z $(dirname $target) ]]; then 
-      $my_mkdir -p $(dirname $target)
+      $my_mkdir -p $(dirname "$target")
     fi
-    $my_mv $f $target
+    $my_mv "$f" "$target"
   else 
-    filename=$(basename $target "$fullfile")
+    filename=$(basename "$target" "$fullfile")
     extension="${filename##*.}"
     filename="${filename%.*}_dup"
-    $my_mv $f $(dirname $target)/$filename.$extension
+    target_dir=$(dirname "$target")
+    $my_mv "$f" "$target_dir/$filename.$extension"
   fi; 
 done
 
