@@ -1,0 +1,44 @@
+#horizontal-layout {
+    layout: horizontal;
+    background: darkmagenta;
+    height: auto;
+}
+
+#vertical-layout {
+    layout: vertical;
+    background: darkmagenta;
+    height: auto;
+}
+
+#dest_tree {
+    background: rgb(33, 33, 33);
+}
+
+#dupe_tree {
+    background: rgb(33, 33, 33);
+}
+
+Header {
+    dock: top;
+    height: 1;
+    content-align: center middle;
+    background: rgb(33, 33, 66);
+    color: white;
+}
+
+#footer_input {
+    dock: bottom;
+    height: 1;
+}
+
+#input {
+    height: 1;
+    border: none;
+    background: rgb(33, 33, 66);
+    color: white;
+  }
+
+Footer {
+    background: rgb(33, 33, 66);
+    color: white;
+}

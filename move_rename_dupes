@@ -4,7 +4,7 @@ usage() {
     echo "Moves all files and directories from source_path to dest_path."
     echo "If a file exists in dest_path then the new file from source_path will be renamed (name.ext -> name_dup.ext)."
     echo "For dry run (print the commands but not run them) pass the '-dry' option."
-    echo -e "\nUsage:\nmove_rename_dupes [-dry] source_path dest_path"
+    echo -e "\nUsage:\n$0 [-dry] source_path dest_path"
     exit 1
 }
 
@@ -34,18 +34,40 @@ find "$src" -type f -print0 |
 while IFS= read -r -d '' file; do
   target="${dst}/${file#${src}/}"
 
+  # bash parameter expansion (%%, ##, etc.): https://stackabuse.com/guide-to-parameter-expansion-in-bash/
+  source_last_dir="$(basename "$(dirname "$file")"%%/)"
+  source_last_dir="${source_last_dir%%/}"
+  target_last_dir="$(basename "$(dirname "$target")"%%/)"
+  target_last_dir="${target_last_dir%%/}"
+  target_dir="$(dirname "$target")"
+  target_dir="${target_dir%%/}"
+  filename="$(basename "$target" "$fullfile")"
+
+  if [ "$source_last_dir" == "$target_last_dir" ]; then
+    target_dir="${target_dir}_dup"
+    target="${target_dir}/$filename}"
+  fi;
+
+  echo "\"target_dir=$target_dir\""
+  echo "\"target=$target\""
+
+  #echo "forgi1 target=$target"
+  #echo "forgi2 dst=$dst"
+  #echo "forgi3 file=$file"
+  #echo "forgi4 src=$src"
+  #echo "\"source_last_dir=$source_last_dir\""
+  #echo "\"target_last_dir=$target_last_dir\""
+
+
   if [[ ! -e "$target" ]]; then 
-    if [[ -z "$(dirname "$target")" ]]; then 
-      $my_mkdir -p \""$(dirname "$target")"\"
+    if [[ -z "$target_dir" ]]; then 
+      $my_mkdir -p "$$target_dir"
     fi
-    $my_mv \""$file"\" \""$target"\"
+    $my_mv "$file" "$target"
   else 
-    filename="$(basename "$target" "$fullfile")"
     extension="${filename##*.}"
     filename="${filename%.*}_dup"
-    target_dir="$(dirname "$target")"
-    target_dir="${target_dir%%/}"
-    $my_mv \""$file"\" \""$target_dir/$filename.$extension"\"
+    $my_mv "$file" "$target_dir/$filename.$extension"
   fi; 
 done
 
