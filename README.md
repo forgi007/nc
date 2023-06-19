@@ -13,3 +13,9 @@ jdupes -uzrS /var/www/nextcloud/data/doro/files/ | tee uniq.json
 
 filesize:
 https://datagy.io/python-file-size/
+
+file preview
+https://www.w3schools.com/html/html_images.asp
+https://pypi.org/project/preview-generator/
+https://www.digitalocean.com/community/tutorials/python-simplehttpserver-http-server
+https://gist.github.com/yukixz/5835965
