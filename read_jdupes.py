@@ -16,32 +16,12 @@ def load_jdupes_json(jdupes_json):
         else:
             return None
 
-def dp_partial_find(what, lst):
-    for l in lst:
-        for w in what:
-            if w in l:
-                return l
-    return None
-
 def read_jdupes(jdupes_filename):
-    #lst=load_jdupes_json("test.json")
     lst=load_jdupes_json(jdupes_filename)
-    dup_path=[]
-    for i,dup in enumerate(lst):
-        file_list=[]
-        #print(f"Duplicate {i}:")
-        plst=[]
+    jdupe_set=set()
+    for dup in lst:
+        dupes=[]
         for file in dup["fileList"]:
-            f=Path(file["filePath"])
-            n=f.name
-            p=f.parent.resolve()
-            #file_list.append(f)
-            #print(f"p:{p} n:{n}")
-            plst.append(p)
-        lst=dp_partial_find(plst, dup_path)
-        if not lst:
-            dup_path.append(plst)
-
-    for i, d in enumerate(dup_path):
-        print(f"{i}:\n" + '\n'.join([str(l) for l in d]))
-    return dup_path
+            dupes.append(file["filePath"])
+        jdupe_set.add(tuple(dupes))
+    return jdupe_set

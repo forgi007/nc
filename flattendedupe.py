@@ -1,5 +1,5 @@
 from pathlib import Path
-import argparse
+import argparse, datetime
 from edit_tui import edit_tui
 from read_jdupes import read_jdupes
 
@@ -20,7 +20,7 @@ parser.add_argument('-a', '--action', default='dry', const='dry', nargs='?', cho
 parser.add_argument('-n', '--dont_dup_dirs', action='store_false', help='do not duplicate existing directory names (default: duplicate existing directory names, i.e. source_path/sub1/* -> dest_path/sub1_dup/.)'),
 args = parser.parse_args()
 
-file_actions=[]
+file_list={"parent":None, "item":[]}
 
 def path_gen(path):
     if path[0]=='/':
@@ -28,7 +28,19 @@ def path_gen(path):
     else:
         return Path('').glob(f"{path}")
 
-def add_action(f, dst_sub_dir, action_list):
+def get_stat(f):
+    stat=f.stat()
+    size=stat.st_size if not f.is_dir() else 0
+    mtime=datetime.datetime.fromtimestamp(stat.st_mtime)
+    ctime=datetime.datetime.fromtimestamp(stat.st_ctime)
+    return {"size":size, "mtime":mtime, "ctime":ctime}
+
+def add_dir(f, dst_sub_dir, file_list, dup=0):
+    dir={"type":"dir", "src":f, "dst":dst_sub_dir, "stat":get_stat(f), "dir_dupe_name":dup, "child":{"parent":None, "item":[]}}
+    dir["child"]["parent"]=dir
+    file_list["item"].append(dir)
+
+def add_file(f, dst_sub_dir, file_list):
     src=Path(f.resolve())
     dup=0
     if dst_sub_dir is not None:
@@ -38,11 +50,15 @@ def add_action(f, dst_sub_dir, action_list):
             dup+=1
     else:
         dst=None
-    action_list.append({"action":"mv", "src":f, "dst":dst, "file_dupe_name":dup})
+    stat=get_stat(f)
+    file_list["item"].append({"type":"file", "src":f, "dst":dst, "stat":stat, "name_dupes":dup})
+    if file_list["parent"] is not None:
+        file_list["parent"]["stat"]["size"]+=stat["size"]
 
-def build_file_actions(file_actions:list):
+
+def build_file_list(file_list:dict):
     _exhausted  = object()
-    def get_files(fn_gen, dst_sub_dir, action_list):
+    def get_files(fn_gen, dst_sub_dir, file_list):
         while True:
             f=next(fn_gen, _exhausted)
             if f is _exhausted:
@@ -60,11 +76,11 @@ def build_file_actions(file_actions:list):
                     while dst_sub_dir.exists():
                         dst_sub_dir=Path(str(dst_sub_dir)+(f"_dup{dup}" if dup else "_dup"))
                         dup+=1
-                child_action_list=[]
-                action_list.append({"action":"mvdir", "src":f, "dst":dst_sub_dir, "dir_dupe_name":dup, "child":child_action_list})
-                get_files(f.iterdir(), dst_sub_dir, child_action_list)
+
+                add_dir(f, dst_sub_dir, file_list, dup)
+                get_files(f.iterdir(), dst_sub_dir, file_list["item"][-1]["child"])
             else:
-                add_action(f, dst_sub_dir, action_list)
+                add_file(f, dst_sub_dir, file_list)
 
     dst_dir=Path(args.dest_path).resolve() if args.dest_path is not None else None
     for src in args.source_path:
@@ -72,13 +88,18 @@ def build_file_actions(file_actions:list):
         if dst_dir is not None and dst_dir.is_relative_to(src_dir):
             print(f"dest_path {dst_dir} should be outside of source_path {src_dir} or None.")
             exit(0)
-        file_actions.append({"action":"mvdir","src":src_dir,"dst":dst_dir, "child":[]})
-        get_files(path_gen(f"{str(src_dir)}/*"), dst_dir, file_actions[-1]["child"])
+        
+        add_dir(src_dir, dst_dir, file_list)
+        get_files(path_gen(f"{str(src_dir)}/*"), dst_dir, file_list["item"][-1]["child"])
 
-def fa_add_jdupe_info(file_actions, jdupes):
+def find_jdupe(jdupe_set, path):
+    return [js for js in jdupe_set if path in js]
+
+def fa_add_jdupe_info(file_list, jdupe_set):
+    f=find_jdupe(jdupe_set, "test/da/db/bb.txt")
     pass
 
-build_file_actions(file_actions)
-jdupes=read_jdupes(args.jdupes)
-fa_add_jdupe_info(file_actions, jdupes)
-edit_tui(file_actions)
+build_file_list(file_list)
+jdupe_set=read_jdupes(args.jdupes)
+fa_add_jdupe_info(file_list, jdupe_set)
+edit_tui(file_list)

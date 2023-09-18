@@ -7,12 +7,17 @@ If you have a lot of (image) files with duplicates in several directories and yo
 It is not a good idea to simply use `mv` to move the files and subdirectories, because you may overwrite some files. So, use `move_rename_dupes` to move files and directories, but rename files when yhey have the same name in source and destination directory
 2., ...
 
+TODO:
+- use sparkline widget (vertically, beside dir) to show number of files and total file size per directory (use different base colors for file num and size)
+
 Notes:
 jdupes -jzrS /var/www/nextcloud/data/doro/files/ | tee dup.json
 jdupes -uzrS /var/www/nextcloud/data/doro/files/ | tee uniq.json
 
 filesize:
 https://datagy.io/python-file-size/
+
+file creation date on linux
 
 file preview
 https://www.w3schools.com/html/html_images.asp

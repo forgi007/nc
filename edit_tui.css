@@ -1,4 +1,9 @@
-#horizontal-layout {
+#dest-horizontal-layout {
+    layout: horizontal;
+    background: darkmagenta;
+    height: auto;
+}
+#dupe-horizontal-layout {
     layout: horizontal;
     background: darkmagenta;
     height: auto;
